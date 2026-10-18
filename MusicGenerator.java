@@ -194,26 +194,13 @@ public class MusicGenerator {
     }
 
 
-    /* The start of a pattern written out, so you can read it in the terminal. */
-    static String firstFew(int[] notes) {
-        String text = "";
-        for (int i = 0; i < 8; i++) {
-            if (notes[i] == HIGH_NOTE) {
-                text = text + "high ";
-            } else {
-                text = text + "low ";
-            }
-        }
-        return text + "...";
-    }
-
 
     public static void main(String[] args) throws Exception {
         new File(OUT).mkdirs();
 
         int[][] patterns = new int[LEVELS][];
 
-        System.out.println("level   tempo   seconds   notes/sec   repeats   pattern starts");
+        System.out.println("level   tempo   seconds   notes/sec   repeats");
 
         for (int level = 1; level <= LEVELS; level++) {
             int tempo = tempoForLevel(level);
@@ -225,8 +212,8 @@ public class MusicGenerator {
             /* One note per beat, so the piece lasts BEATS beats at this tempo. */
             double seconds = BEATS * 60.0 / tempo;
 
-            System.out.printf("%-8d%-8d%-10.1f%-12.2f%-10d%s%n",
-                    level, tempo, seconds, BEATS / seconds, countRepeats(notes), firstFew(notes));
+            System.out.printf("%-8d%-8d%-10.1f%-12.2f%d%n",
+                    level, tempo, seconds, BEATS / seconds, countRepeats(notes));
         }
 
         savePicture(patterns, OUT + "/patterns.png");
