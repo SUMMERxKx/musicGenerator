@@ -39,17 +39,18 @@ It finishes in under a second and writes everything into `output/`.
 
 | Level | Tempo (bpm) | Length (s) | Notes/s | Repeats |
 |---|---|---|---|---|
-| 1 | 80 | 24.0 | 1.33 | 8 |
-| 2 | 110 | 17.5 | 1.83 | 9 |
-| 3 | 140 | 13.7 | 2.33 | 8 |
-| 4 | 170 | 11.3 | 2.83 | 7 |
-| 5 | 200 | 9.6 | 3.33 | 8 |
+| 1 | 80 | 24.0 | 1.33 | 7 |
+| 2 | 110 | 17.5 | 1.83 | 7 |
+| 3 | 140 | 13.7 | 2.33 | 6 |
+| 4 | 170 | 11.3 | 2.83 | 8 |
+| 5 | 200 | 9.6 | 3.33 | 14 |
 
 The tempo rises from 80 to 200 bpm, so the same 32-note pattern goes from 24.0 s down to
-9.6 s and the note rate rises by a factor of 2.5. The repeat count stays between 7 and 9,
-close to the 7.75 expected from a 0.25 repeat chance over 31 transitions, which shows the
-randomness is independent of the difficulty: the levels differ in speed, not in how
-irregular they sound.
+9.6 s and the note rate rises by a factor of 2.5. The repeat count ranges from 6 to 14
+with a mean of 8.4, against the 7.75 expected from a 25% repeat chance over 31 decisions.
+With only 31 decisions per level that spread is ordinary randomness, not an effect of
+difficulty: the repeat chance is a constant and is never read from the level number, so
+the levels differ in speed alone.
 
 A game only has to store the level number. The music is rebuilt from it every time, so no
 audio files need shipping.
@@ -65,8 +66,9 @@ static final int LEVELS = 5;                // how many levels
 static final int BEATS = 32;                // notes per piece
 static final int TEMPO_EASY = 80;           // level 1 speed
 static final int TEMPO_HARD = 200;          // last level speed
-static final double REPEAT_CHANCE = 0.25;   // how random it gets
+static final int REPEAT_PERCENT = 25;       // out of 100, how often a note repeats
 ```
 
-Set `REPEAT_CHANCE` to `0.0` for a strict low-high-low-high, or raise it to break the
-pulse more often.
+Set `REPEAT_PERCENT` to `0` for a strict low-high-low-high, or raise it to break the
+pulse more often. Everything is whole numbers, so there are no type conversions to read
+past.

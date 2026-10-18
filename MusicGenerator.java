@@ -1,23 +1,18 @@
-// COMP 4980 - Procedural game music generator
-//
-// The idea is deliberately small:
-//   - the melody only ever uses TWO notes, a low C and a high C
-//   - it mostly alternates between them: low, high, low, high, ...
-//   - sometimes it randomly repeats a note instead, so no two runs are the same
-//     (that gives patterns like low, low, high, high)
-//   - a kick drum plays on every beat so it sounds like game music
-//   - the TEMPO comes from the difficulty level: harder level = faster music
-//
-// It writes one MIDI file per level, plus one picture showing the patterns.
-//
-// Java can write MIDI on its own (javax.sound.midi is part of the standard
-// library), so this program needs no outside libraries at all.
-//
-// How to run it:
-//   javac MusicGenerator.java
-//   java MusicGenerator
+/*
+ * COMP 4980 - Procedural game music generator
+ *
+ * The melody uses two notes: a low C and a high C. It mostly alternates
+ * between them, but every so often it repeats a note instead of swapping,
+ * which is what makes each level sound different. A drum hits every beat.
+ *
+ * The game gives one thing: the level number. That sets the tempo, so the
+ * harder the level, the faster the music.
+ *
+ * Run it with:
+ *     javac MusicGenerator.java
+ *     java MusicGenerator
+ */
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -36,60 +31,51 @@ import javax.sound.midi.Track;
 
 public class MusicGenerator {
 
-    // ---------------------------------------------------------------------
-    // SETTINGS - change these to change the music
-    // ---------------------------------------------------------------------
+    /* The only two notes in the whole piece. 60 is middle C, 72 is the C above it. */
+    static final int LOW_NOTE = 60;
+    static final int HIGH_NOTE = 72;
 
-    // The only two notes in the whole piece.
-    // In MIDI every note is a number: 60 is middle C, and +12 is the same
-    // note one octave higher. So these are a low C and a high C.
-    static final int LOW_NOTE = 60;    // C4
-    static final int HIGH_NOTE = 72;   // C5
+    /* How much music to make. */
+    static final int LEVELS = 5;
+    static final int BEATS = 32;
 
-    static final int LEVELS = 5;       // how many levels to write music for
-    static final int BEATS = 32;       // how many notes each piece has
+    /* Tempo on the first and last level, in beats per minute. */
+    static final int TEMPO_EASY = 80;
+    static final int TEMPO_HARD = 200;
 
-    static final int TEMPO_EASY = 80;  // beats per minute on level 1
-    static final int TEMPO_HARD = 200; // beats per minute on the last level
+    /* Out of 100, how often a note repeats instead of swapping to the other one.
+     * 0 gives a perfect low-high-low-high. Bigger numbers break it up more. */
+    static final int REPEAT_PERCENT = 25;
 
-    // Chance of repeating the same note instead of swapping to the other one.
-    // 0.0 would be a perfect low-high-low-high. 0.25 keeps it mostly regular
-    // but lets a repeat sneak in every few notes, which is the random part.
-    static final double REPEAT_CHANCE = 0.25;
-
-    static final int DRUM_NOTE = 36;   // bass drum in General MIDI
-    static final int DRUM_CHANNEL = 9; // channel 9 is always percussion
-
+    /* MIDI settings. Channel 10 is always the drum kit, and Java counts from 0. */
+    static final int DRUM_NOTE = 36;
+    static final int DRUM_CHANNEL = 9;
     static final int TICKS_PER_BEAT = 480;
+
     static final String OUT = "output";
 
-    // ---------------------------------------------------------------------
-    // THE GENERATOR
-    // ---------------------------------------------------------------------
 
-    // Works out the tempo for a level: level 1 is slow, the last level is fast.
+    /* Level 1 is the slowest, the last level is the fastest, evenly spaced between. */
     static int tempoForLevel(int level) {
-        if (LEVELS <= 1) {
+        if (LEVELS == 1) {
             return TEMPO_EASY;
         }
-        double hardness = (double) (level - 1) / (LEVELS - 1);   // 0.0 to 1.0
-        return (int) Math.round(TEMPO_EASY + (TEMPO_HARD - TEMPO_EASY) * hardness);
+        return TEMPO_EASY + (TEMPO_HARD - TEMPO_EASY) * (level - 1) / (LEVELS - 1);
     }
 
-    // Makes the note pattern for one piece.
-    // Gives back an array of MIDI note numbers, one per beat.
-    static int[] makePattern(int level) {
-        Random rng = new Random(level);   // same level always gives the same music
 
+    /* Builds the notes for one level. The level is the random seed, so a level
+     * always gets the same music back. */
+    static int[] makePattern(int level) {
+        Random rng = new Random(level);
         int[] notes = new int[BEATS];
-        int current = LOW_NOTE;           // always start on the low note
+        int current = LOW_NOTE;
 
         for (int i = 0; i < BEATS; i++) {
             notes[i] = current;
 
-            // Decide the next note. Normally swap to the other one,
-            // but sometimes repeat this one instead.
-            if (rng.nextDouble() >= REPEAT_CHANCE) {
+            /* Usually swap to the other note, sometimes stay on this one. */
+            if (rng.nextInt(100) >= REPEAT_PERCENT) {
                 if (current == LOW_NOTE) {
                     current = HIGH_NOTE;
                 } else {
@@ -100,28 +86,33 @@ public class MusicGenerator {
         return notes;
     }
 
-    // ---------------------------------------------------------------------
-    // WRITING THE MIDI FILE
-    // ---------------------------------------------------------------------
 
+    /* How many beats played the same note as the beat before. */
+    static int countRepeats(int[] notes) {
+        int repeats = 0;
+        for (int i = 1; i < notes.length; i++) {
+            if (notes[i] == notes[i - 1]) {
+                repeats++;
+            }
+        }
+        return repeats;
+    }
+
+
+    /* Writes the music as a MIDI file: one track for the notes, one for the drum. */
     static void saveMidi(int[] notes, int tempo, String path) throws Exception {
         Sequence sequence = new Sequence(Sequence.PPQ, TICKS_PER_BEAT);
         Track melody = sequence.createTrack();
         Track drums = sequence.createTrack();
 
-        addTempo(melody, tempo);
+        melody.add(tempoEvent(tempo));
 
-        // the melody: one note per beat
         for (int i = 0; i < notes.length; i++) {
-            long start = (long) i * TICKS_PER_BEAT;
-            long end = start + TICKS_PER_BEAT;
+            int start = i * TICKS_PER_BEAT;
+
             melody.add(noteEvent(ShortMessage.NOTE_ON, 0, notes[i], 100, start));
-            melody.add(noteEvent(ShortMessage.NOTE_OFF, 0, notes[i], 0, end));
-        }
+            melody.add(noteEvent(ShortMessage.NOTE_OFF, 0, notes[i], 0, start + TICKS_PER_BEAT));
 
-        // the drum: a kick on every beat
-        for (int i = 0; i < notes.length; i++) {
-            long start = (long) i * TICKS_PER_BEAT;
             drums.add(noteEvent(ShortMessage.NOTE_ON, DRUM_CHANNEL, DRUM_NOTE, 90, start));
             drums.add(noteEvent(ShortMessage.NOTE_OFF, DRUM_CHANNEL, DRUM_NOTE, 0, start + 120));
         }
@@ -129,133 +120,118 @@ public class MusicGenerator {
         MidiSystem.write(sequence, 1, new File(path));
     }
 
-    static MidiEvent noteEvent(int type, int channel, int note, int velocity, long tick)
+
+    /* One note starting or stopping at a point in time. */
+    static MidiEvent noteEvent(int type, int channel, int note, int loudness, int tick)
             throws Exception {
-        return new MidiEvent(new ShortMessage(type, channel, note, velocity), tick);
+        return new MidiEvent(new ShortMessage(type, channel, note, loudness), tick);
     }
 
-    // the tempo is stored as how many microseconds one beat lasts
-    static void addTempo(Track track, int beatsPerMinute) throws Exception {
-        int microsecondsPerBeat = 60000000 / beatsPerMinute;
-        byte[] data = {
-            (byte) ((microsecondsPerBeat >> 16) & 0xFF),
-            (byte) ((microsecondsPerBeat >> 8) & 0xFF),
-            (byte) (microsecondsPerBeat & 0xFF)
-        };
-        track.add(new MidiEvent(new MetaMessage(0x51, data, data.length), 0));
+
+    /* MIDI stores tempo as how many microseconds one beat lasts, split into
+     * three bytes. This is the only place that has to fiddle with bytes. */
+    static MidiEvent tempoEvent(int beatsPerMinute) throws Exception {
+        int microseconds = 60000000 / beatsPerMinute;
+        byte[] data = new byte[3];
+        data[0] = (byte) (microseconds >> 16);
+        data[1] = (byte) (microseconds >> 8);
+        data[2] = (byte) microseconds;
+        return new MidiEvent(new MetaMessage(0x51, data, 3), 0);
     }
 
-    // ---------------------------------------------------------------------
-    // THE PICTURE
-    //
-    // One row per level. Each beat is a block: a low block for the low note
-    // and a high block for the high note. You can see the pattern alternating,
-    // and you can see where the random repeats happen.
-    // ---------------------------------------------------------------------
 
-    static void savePicture(int[][] allPatterns, String path) throws Exception {
+    /* Draws every level's pattern into one picture. Each beat is a block:
+     * high notes sit on the top row, low notes on the bottom row. */
+    static void savePicture(int[][] patterns, String path) throws Exception {
         int left = 90;
-        int cell = 26;
+        int blockSize = 26;
         int rowHeight = 80;
-        int width = left + BEATS * cell + 30;
+        int width = left + BEATS * blockSize + 30;
         int height = 60 + LEVELS * rowHeight;
 
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        BufferedImage picture = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D pen = picture.createGraphics();
+        pen.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, width, height);
+        pen.setColor(Color.WHITE);
+        pen.fillRect(0, 0, width, height);
 
-        g.setColor(new Color(60, 60, 60));
-        g.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        g.drawString("Each block is one beat.  Top row = high C,  bottom row = low C.", 20, 28);
+        Color grey = new Color(60, 60, 60);
+        Color blue = new Color(55, 138, 221);
+        Color orange = new Color(239, 159, 39);
+
+        pen.setColor(grey);
+        pen.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        pen.drawString("Each block is one beat.  Top row = high C,  bottom row = low C.", 20, 28);
 
         for (int level = 0; level < LEVELS; level++) {
             int top = 50 + level * rowHeight;
-            int[] pattern = allPatterns[level];
+            int[] notes = patterns[level];
 
-            g.setColor(new Color(60, 60, 60));
-            g.setFont(new Font("SansSerif", Font.PLAIN, 13));
-            g.drawString("Level " + (level + 1), 20, top + 30);
-            g.drawString(tempoForLevel(level + 1) + " bpm", 20, top + 48);
+            pen.setColor(grey);
+            pen.setFont(new Font("SansSerif", Font.PLAIN, 13));
+            pen.drawString("Level " + (level + 1), 20, top + 30);
+            pen.drawString(tempoForLevel(level + 1) + " bpm", 20, top + 48);
 
-            for (int i = 0; i < pattern.length; i++) {
-                int x = left + i * cell;
-                int y;
-                if (pattern[i] == HIGH_NOTE) {
-                    y = top + 6;                 // high note sits on the top row
-                    g.setColor(new Color(55, 138, 221));
+            for (int i = 0; i < notes.length; i++) {
+                int x = left + i * blockSize;
+
+                if (notes[i] == HIGH_NOTE) {
+                    pen.setColor(blue);
+                    pen.fillRect(x, top + 6, blockSize - 4, 20);
                 } else {
-                    y = top + 32;                // low note sits on the bottom row
-                    g.setColor(new Color(239, 159, 39));
+                    pen.setColor(orange);
+                    pen.fillRect(x, top + 32, blockSize - 4, 20);
                 }
-                g.fillRect(x, y, cell - 4, 20);
             }
 
-            g.setColor(new Color(210, 210, 210));
-            g.setStroke(new BasicStroke(1));
-            g.drawLine(20, top + rowHeight - 8, width - 20, top + rowHeight - 8);
+            pen.setColor(new Color(210, 210, 210));
+            pen.drawLine(20, top + rowHeight - 8, width - 20, top + rowHeight - 8);
         }
 
-        g.dispose();
-        ImageIO.write(image, "png", new File(path));
+        pen.dispose();
+        ImageIO.write(picture, "png", new File(path));
     }
 
-    // ---------------------------------------------------------------------
-    // MAIN
-    // ---------------------------------------------------------------------
+
+    /* The start of a pattern written out, so you can read it in the terminal. */
+    static String firstFew(int[] notes) {
+        String text = "";
+        for (int i = 0; i < 8; i++) {
+            if (notes[i] == HIGH_NOTE) {
+                text = text + "high ";
+            } else {
+                text = text + "low ";
+            }
+        }
+        return text + "...";
+    }
+
 
     public static void main(String[] args) throws Exception {
         new File(OUT).mkdirs();
 
-        int[][] allPatterns = new int[LEVELS][];
+        int[][] patterns = new int[LEVELS][];
 
         System.out.println("level   tempo   seconds   notes/sec   repeats   pattern starts");
+
         for (int level = 1; level <= LEVELS; level++) {
             int tempo = tempoForLevel(level);
             int[] notes = makePattern(level);
-            allPatterns[level - 1] = notes;
+            patterns[level - 1] = notes;
 
-            String path = OUT + "/level" + level + ".mid";
-            saveMidi(notes, tempo, path);
+            saveMidi(notes, tempo, OUT + "/level" + level + ".mid");
 
-            // how long the piece lasts: one note per beat, at this many beats per minute
+            /* One note per beat, so the piece lasts BEATS beats at this tempo. */
             double seconds = BEATS * 60.0 / tempo;
 
             System.out.printf("%-8d%-8d%-10.1f%-12.2f%-10d%s%n",
                     level, tempo, seconds, BEATS / seconds, countRepeats(notes), firstFew(notes));
         }
 
-        savePicture(allPatterns, OUT + "/patterns.png");
+        savePicture(patterns, OUT + "/patterns.png");
 
         System.out.println();
         System.out.println("wrote " + LEVELS + " MIDI files and patterns.png into " + OUT + "/");
-    }
-
-    // Counts how many times the pattern repeated a note instead of swapping.
-    // This is the randomness showing up: with REPEAT_CHANCE of 0.25 we expect
-    // about a quarter of the beats to be repeats.
-    static int countRepeats(int[] notes) {
-        int repeats = 0;
-        for (int i = 1; i < notes.length; i++) {
-            if (notes[i] == notes[i - 1]) {
-                repeats = repeats + 1;
-            }
-        }
-        return repeats;
-    }
-
-    // shows the first few notes as "low high low high ..." so you can see the pattern
-    static String firstFew(int[] notes) {
-        StringBuilder text = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
-            if (notes[i] == HIGH_NOTE) {
-                text.append("high ");
-            } else {
-                text.append("low ");
-            }
-        }
-        return text.toString().trim() + " ...";
     }
 }
