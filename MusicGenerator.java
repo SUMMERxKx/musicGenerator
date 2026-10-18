@@ -26,9 +26,9 @@ public class MusicGenerator {
     static int levels = 5;
     static int beats = 32;
 
-    /* Tempo on the first and last level, in beats per minute. */
+    /* Level 1 plays at 80 beats per minute, and every level after is 30 faster. */
     static int tempoEasy = 80;
-    static int tempoHard = 200;
+    static int tempoStep = 30;
 
     /* Out of 100, how often a note repeats instead of swapping to the other one.
      * 0 gives a perfect low-high-low-high. Bigger numbers break it up more. */
@@ -42,12 +42,9 @@ public class MusicGenerator {
     static String outputFolder = "output";
 
 
-    /* Level 1 is the slowest, the last level is the fastest, evenly spaced between. */
+    /* Level 1 gets the base tempo, level 2 gets one step more, and so on. */
     static int tempoForLevel(int level) {
-        if (levels == 1) {
-            return tempoEasy;
-        }
-        return tempoEasy + (tempoHard - tempoEasy) * (level - 1) / (levels - 1);
+        return tempoEasy + tempoStep * (level - 1);
     }
 
 
