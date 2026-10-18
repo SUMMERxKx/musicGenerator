@@ -27,12 +27,13 @@ public class MusicGenerator {
     static int beats = 32;
 
     /* Level 1 plays at 80 beats per minute, and every level after is 30 faster. */
-    static int tempoEasy = 80;
-    static int tempoStep = 30;
+    static int tempoBase = 80;
+    static int tempoIncrement = 30;
 
-    /* Out of 100, how often a note repeats instead of swapping to the other one.
-     * 0 gives a perfect low-high-low-high. Bigger numbers break it up more. */
-    static int repeatPercent = 25;
+    /* How messy the pattern is, out of 100. It is the chance that a beat repeats
+     * the note instead of swapping. 0 gives a perfect low-high-low-high, and
+     * bigger numbers break up the pulse more often. */
+    static int noteRandomness = 25;
 
     /* MIDI settings. Channel 10 is always the drum kit, and Java counts from 0. */
     static int drumNote = 36;
@@ -44,7 +45,7 @@ public class MusicGenerator {
 
     /* Level 1 gets the base tempo, level 2 gets one step more, and so on. */
     static int tempoForLevel(int level) {
-        return tempoEasy + tempoStep * (level - 1);
+        return tempoBase + tempoIncrement * (level - 1);
     }
 
 
@@ -59,7 +60,7 @@ public class MusicGenerator {
             notes[i] = current;
 
             /* Usually swap to the other note, sometimes stay on this one. */
-            if (rng.nextInt(100) >= repeatPercent) {
+            if (rng.nextInt(100) >= noteRandomness) {
                 if (current == lowNote) {
                     current = highNote;
                 } else {

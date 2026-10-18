@@ -10,6 +10,8 @@ The melody uses **only two notes**: a low C and a high C. It mostly alternates b
 them, but on every beat there is a 25% chance it repeats the note instead of swapping, so
 each level gets a different pattern. A bass drum marks every beat.
 
+Level 1 plays at 80 bpm and every level after is 30 faster, so level 5 runs at 200.
+
 The one thing the game controls is the **difficulty level**, and it sets the **tempo**.
 The harder the level, the faster the music.
 
@@ -63,15 +65,15 @@ audio files need shipping.
 Everything worth changing is at the top of `MusicGenerator.java`:
 
 ```java
-static final int LOW_NOTE = 60;             // the two notes
-static final int HIGH_NOTE = 72;
-static final int LEVELS = 5;                // how many levels
-static final int BEATS = 32;                // notes per piece
-static final int TEMPO_EASY = 80;           // level 1 speed
-static final int TEMPO_HARD = 200;          // last level speed
-static final int REPEAT_PERCENT = 25;       // out of 100, how often a note repeats
+static int lowNote = 60;          // the two notes
+static int highNote = 72;
+static int levels = 5;            // how many levels
+static int beats = 32;            // notes per piece
+static int tempoBase = 80;        // level 1 speed
+static int tempoIncrement = 30;   // how much faster each level gets
+static int noteRandomness = 25;   // out of 100, how messy the pattern is
 ```
 
-Set `REPEAT_PERCENT` to `0` for a strict low-high-low-high, or raise it to break the
+Set `noteRandomness` to `0` for a strict low-high-low-high, or raise it to break the
 pulse more often. Everything is whole numbers, so there are no type conversions to read
 past.
