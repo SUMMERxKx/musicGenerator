@@ -7,29 +7,14 @@
  *
  * The game gives one thing: the level number. That sets the tempo, so the
  * harder the level, the faster the music.
- *
- * Run it with:
- *     java MusicGenerator.java
- *
- * That one command compiles and runs it, because the whole program is a
- * single file. Java 11 and later allow this.
  */
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.Random;
-
-import javax.imageio.ImageIO;
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Track;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import java.util.*;
+import javax.imageio.*;
+import javax.sound.midi.*;
 
 public class MusicGenerator {
 
