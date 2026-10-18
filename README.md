@@ -16,9 +16,12 @@ The harder the level, the faster the music.
 ## How to run
 
 ```
-javac MusicGenerator.java
-java MusicGenerator
+java MusicGenerator.java
 ```
+
+That single command compiles and runs the program, because the whole thing is one file.
+Java 11 and later allow this; on an older Java, compile first with `javac
+MusicGenerator.java` and then run `java MusicGenerator`.
 
 There is nothing to install. MIDI writing (`javax.sound.midi`) and drawing (`java.awt`)
 both come with Java, so the program has no outside dependencies.

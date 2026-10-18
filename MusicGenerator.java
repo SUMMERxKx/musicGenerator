@@ -9,8 +9,10 @@
  * harder the level, the faster the music.
  *
  * Run it with:
- *     javac MusicGenerator.java
- *     java MusicGenerator
+ *     java MusicGenerator.java
+ *
+ * That one command compiles and runs it, because the whole program is a
+ * single file. Java 11 and later allow this.
  */
 
 import java.awt.Color;
@@ -196,6 +198,11 @@ public class MusicGenerator {
 
 
     public static void main(String[] args) throws Exception {
+        /* Drawing starts up Java's window system, which leaves a thread running
+         * and stops the program from exiting on its own. We only write a file,
+         * so tell it there is no screen. This has to come before any drawing. */
+        System.setProperty("java.awt.headless", "true");
+
         new File(OUT).mkdirs();
 
         int[][] patterns = new int[LEVELS][];
