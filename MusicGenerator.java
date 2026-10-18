@@ -182,14 +182,13 @@ public class MusicGenerator {
 
 
 
-    /* Makes every level and writes it out. Anything that can go wrong here is a
-     * disk problem, and main deals with it. */
-    static void makeEverything() throws Exception {
-        File folder = new File(OUT);
-        folder.mkdirs();
-        if (!folder.isDirectory()) {
-            throw new IOException("could not create the " + OUT + " folder");
-        }
+    public static void main(String[] args) throws Exception {
+        /* Drawing starts up Java's window system, which leaves a thread running
+         * and stops the program from exiting on its own. We only write a file,
+         * so tell it there is no screen. This has to come before any drawing. */
+        System.setProperty("java.awt.headless", "true");
+
+        new File(OUT).mkdirs();
 
         int[][] patterns = new int[LEVELS][];
 
@@ -213,27 +212,5 @@ public class MusicGenerator {
 
         System.out.println();
         System.out.println("wrote " + LEVELS + " MIDI files and patterns.png into " + OUT + "/");
-    }
-
-
-    /* The only place that handles problems. Everything else just says it might
-     * have one, so the rest of the code stays free of try blocks. */
-    public static void main(String[] args) {
-        try {
-            /* Drawing starts up Java's window system, which leaves a thread running
-             * and stops the program from exiting on its own. We only write a file,
-             * so tell it there is no screen. This has to come before any drawing. */
-            System.setProperty("java.awt.headless", "true");
-
-            makeEverything();
-        } catch (Exception problem) {
-            System.out.println();
-            System.out.println("Could not finish: " + problem.getMessage());
-            System.out.println("Check that there is room on the disk and that you can");
-            System.out.println("write to this folder, then run it again.");
-
-            /* Anything other than 0 tells whoever ran us that it did not work. */
-            System.exit(1);
-        }
     }
 }
