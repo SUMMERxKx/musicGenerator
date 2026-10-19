@@ -1,6 +1,6 @@
 # Two-Note Procedural Music Generator
 
-COMP 4980, portfolio element 2 (Category 3: computationally generated music)
+COMP 4980 - Category 3: computationally generated music
 
 Games use procedural content generation (PCG) so players get new content every time they
 play. This project does the same for background music, with the smallest generator that

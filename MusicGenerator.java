@@ -2,7 +2,7 @@
  * Samar Khajuria   T00714740
  *
  * COMP 4980 - Procedural Content Generation
- * Portfolio Element 2, Category 3: computationally generated music
+ * Category 3: computationally generated music
  *
  * Procedural game music generator.
  *
