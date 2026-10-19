@@ -1,5 +1,10 @@
 /*
- * COMP 4980 - Procedural game music generator
+ * Samar Khajuria   T00714740
+ *
+ * COMP 4980 - Procedural Content Generation
+ * Portfolio Element 2, Category 3: computationally generated music
+ *
+ * Procedural game music generator.
  *
  * The melody uses two notes: a low C and a high C. It mostly alternates
  * between them, but every so often it repeats a note instead of swapping,
@@ -18,24 +23,19 @@ import javax.sound.midi.*;
 
 public class MusicGenerator {
 
-    /* The only two notes in the whole piece. 60 is middle C, 72 is the C above it. */
+    // The only two notes in the whole piece. 60 is middle C, 72 is the C above it. 
     static int lowNote = 60;
     static int highNote = 72;
 
-    /* How much music to make. */
     static int levels = 5;
     static int beats = 32;
 
-    /* Level 1 plays at 80 beats per minute, and every level after is 30 faster. */
+    // Level 1 plays at 80 beats per minute, and every level after is 30 faster. 
     static int tempoBase = 80;
     static int tempoIncrement = 30;
-
-    /* How messy the pattern is, out of 100. It is the chance that a beat repeats
-     * the note instead of swapping. 0 gives a perfect low-high-low-high, and
-     * bigger numbers break up the pulse more often. */
     static int noteRandomness = 25;
 
-    /* MIDI settings. Channel 10 is always the drum kit, and Java counts from 0. */
+    // MIDI settings. Channel 10 is always the drum kit, and Java counts from 0. 
     static int drumNote = 36;
     static int drumChannel = 9;
     static int ticksPerBeat = 480;
@@ -43,14 +43,14 @@ public class MusicGenerator {
     static String outputFolder = "output";
 
 
-    /* Level 1 gets the base tempo, level 2 gets one step more, and so on. */
+    // Level 1 gets the base tempo, level 2 gets one step more, and so on. 
     static int tempoForLevel(int level) {
         return tempoBase + tempoIncrement * (level - 1);
     }
 
 
-    /* Builds the notes for one level. The level is the random seed, so a level
-     * always gets the same music back. */
+    // Builds the notes for one level. The level is the random seed, so a level
+    // always gets the same music back. 
     static int[] makePattern(int level) {
         Random rng = new Random(level);
         int[] notes = new int[beats];
@@ -59,7 +59,6 @@ public class MusicGenerator {
         for (int i = 0; i < beats; i++) {
             notes[i] = current;
 
-            /* Usually swap to the other note, sometimes stay on this one. */
             if (rng.nextInt(100) >= noteRandomness) {
                 if (current == lowNote) {
                     current = highNote;
@@ -72,7 +71,7 @@ public class MusicGenerator {
     }
 
 
-    /* How many beats played the same note as the beat before. */
+    // How many beats played the same note as the beat before. 
     static int countRepeats(int[] notes) {
         int repeats = 0;
         for (int i = 1; i < notes.length; i++) {
@@ -84,7 +83,7 @@ public class MusicGenerator {
     }
 
 
-    /* Writes the music as a MIDI file: one track for the notes, one for the drum. */
+    // Writes the music as a MIDI file: one track for the notes, one for the drum. 
     static void saveMidi(int[] notes, int tempo, String path) throws Exception {
         Sequence sequence = new Sequence(Sequence.PPQ, ticksPerBeat);
         Track melody = sequence.createTrack();
@@ -106,7 +105,7 @@ public class MusicGenerator {
     }
 
 
-    /* One note starting or stopping at a point in time. */
+    // One note starting or stopping at a point in time. 
     static MidiEvent noteEvent(int type, int channel, int note, int loudness, int tick)
             throws Exception {
         return new MidiEvent(new ShortMessage(type, channel, note, loudness), tick);
@@ -182,9 +181,7 @@ public class MusicGenerator {
 
 
     public static void main(String[] args) throws Exception {
-        /* Drawing starts up Java's window system, which leaves a thread running
-         * and stops the program from exiting on its own. We only write a file,
-         * so tell it there is no screen. This has to come before any drawing. */
+        
         System.setProperty("java.awt.headless", "true");
 
         new File(outputFolder).mkdirs();
@@ -200,12 +197,12 @@ public class MusicGenerator {
 
             saveMidi(notes, tempo, outputFolder + "/level" + level + ".mid");
 
-            /* One note per beat, so the piece is 32 beats long at this tempo. */
+            // One note per beat, so the piece is 32 beats long at this tempo. 
             double seconds = beats * 60.0 / tempo;
             double notesPerSecond = beats / seconds;
 
-            /* Math.round only gives whole numbers, so multiply first and divide
-             * after: 13.714 x 10 is 137.14, rounds to 137, divided back is 13.7. */
+            // Math.round only gives whole numbers, so multiply first and divide
+            // after: 13.714 x 10 is 137.14, rounds to 137, divided back is 13.7. 
             double secondsShown = Math.round(seconds * 10) / 10.0;
             double rateShown = Math.round(notesPerSecond * 100) / 100.0;
 
