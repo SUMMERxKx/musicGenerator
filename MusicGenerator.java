@@ -128,11 +128,11 @@ public class MusicGenerator {
     /* Draws every level's pattern into one picture. Each beat is a block:
      * high notes sit on the top row, low notes on the bottom row. */
     static void savePicture(int[][] patterns, String path) throws Exception {
-        int left = 90;
+        int left = 190;
         int blockSize = 26;
         int rowHeight = 80;
         int width = left + beats * blockSize + 30;
-        int height = 60 + levels * rowHeight;
+        int height = 20 + levels * rowHeight;
 
         BufferedImage picture = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D pen = picture.createGraphics();
@@ -145,18 +145,14 @@ public class MusicGenerator {
         Color blue = new Color(55, 138, 221);
         Color orange = new Color(239, 159, 39);
 
-        pen.setColor(grey);
-        pen.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        pen.drawString("Each block is one beat.  Top row = high C,  bottom row = low C.", 20, 28);
-
         for (int level = 0; level < levels; level++) {
-            int top = 50 + level * rowHeight;
+            int top = 10 + level * rowHeight;
             int[] notes = patterns[level];
 
             pen.setColor(grey);
-            pen.setFont(new Font("SansSerif", Font.PLAIN, 13));
-            pen.drawString("Level " + (level + 1), 20, top + 30);
-            pen.drawString(tempoForLevel(level + 1) + " bpm", 20, top + 48);
+            pen.setFont(new Font("SansSerif", Font.PLAIN, 34));
+            pen.drawString("Level " + (level + 1), 20, top + 28);
+            pen.drawString(tempoForLevel(level + 1) + " bpm", 20, top + 66);
 
             for (int i = 0; i < notes.length; i++) {
                 int x = left + i * blockSize;
