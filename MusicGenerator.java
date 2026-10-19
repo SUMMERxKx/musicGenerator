@@ -191,7 +191,7 @@ public class MusicGenerator {
 
         int[][] patterns = new int[levels][];
 
-        System.out.println("level   tempo   seconds   notes/sec   repeats");
+        System.out.println("level\ttempo\tseconds\tnotes/sec\trepeats");
 
         for (int level = 1; level <= levels; level++) {
             int tempo = tempoForLevel(level);
@@ -200,11 +200,17 @@ public class MusicGenerator {
 
             saveMidi(notes, tempo, outputFolder + "/level" + level + ".mid");
 
-            /* One note per beat, so the piece lasts beats beats at this tempo. */
+            /* One note per beat, so the piece is 32 beats long at this tempo. */
             double seconds = beats * 60.0 / tempo;
+            double notesPerSecond = beats / seconds;
 
-            System.out.printf("%-8d%-8d%-10.1f%-12.2f%d%n",
-                    level, tempo, seconds, beats / seconds, countRepeats(notes));
+            /* Math.round only gives whole numbers, so multiply first and divide
+             * after: 13.714 x 10 is 137.14, rounds to 137, divided back is 13.7. */
+            double secondsShown = Math.round(seconds * 10) / 10.0;
+            double rateShown = Math.round(notesPerSecond * 100) / 100.0;
+
+            System.out.println(level + "\t" + tempo + "\t" + secondsShown
+                    + "\t" + rateShown + "\t" + countRepeats(notes));
         }
 
         savePicture(patterns, outputFolder + "/patterns.png");
