@@ -1,38 +1,37 @@
 # Two-note music generator
 
-I wrote this for COMP 4980, Category 3, computationally generated music. It's a small
-Java program that generates the background music for game levels instead of shipping
-audio files.
+A small Java program that writes the background music for game levels instead of the
+game shipping audio files. Written for COMP 4980, Category 3, computationally generated
+music.
 
-The melody only uses two notes, MIDI 60 and 72, which is a low C and the C an octave
-above it. It mostly just alternates between them, but on each beat there's a 25% chance
-it repeats the note it played instead of swapping. That's the only thing making the
-levels sound different from each other. A bass drum hits every beat underneath.
+Most generated music tries to sound rich. I went the other way and asked how small a
+generator can get while still producing something that varies and still reacting to the
+game. The answer turned out to be two notes and one random decision per beat.
 
-The level number is the seed for the random generator, so replaying a level gives you
-the exact same music back, and a different level gives you something different. The
-level also sets the tempo. Level 1 is 80 bpm and every level after that adds 30, so
-level 5 runs at 200.
+## How it works
 
-It is deliberately tiny. Two notes and one random decision per beat is about as small as
-a generator can get and still produce something that varies, and I wanted the whole
-thing to fit in one readable file.
+The melody only ever uses two notes, MIDI 60 and 72. That is a low C and the C an octave
+above it. Because they are an octave apart they are the same note name, so they always
+sound right together and there is no key or scale to worry about.
 
-## Running it
+Each piece is thirty two notes long and plays one note per beat. The generator normally
+swaps between the two notes, which on its own would give low, high, low, high forever and
+the same piece every time. So on each beat it rolls a number from 0 to 99, and if that
+number lands under 25 it repeats the current note instead of swapping. A repeat knocks
+the rest of the pattern onto the opposite foot, and that is the only thing making one
+level sound different from another.
 
-```
-java MusicGenerator.java
-```
+Underneath all of it a bass drum hits every beat, which gives the repeats something
+steady to push against so they read as variation rather than mistakes.
 
-That's the whole thing. Java 11 or newer runs a single file directly, so there's nothing
-to compile first and no libraries to install. MIDI writing and drawing both come with
-Java. On an older version, run `javac MusicGenerator.java` and then `java MusicGenerator`.
+The level number is the seed for the random numbers. Replaying a level gives back the
+exact same music, while a different level gives something different. That means a game
+only has to remember which level the player is on, not store an audio file for it.
 
-It takes under a second and writes five MIDI files and one PNG into `output/`. The .mid
-files open in GarageBand or MuseScore, and the PNG draws all five patterns as blocks so
-you can see them side by side.
+## Difficulty
 
-## Results
+The one thing the game controls is the level, and it sets the tempo. Level 1 plays at 80
+beats per minute and every level after that adds 30.
 
 | Level | Tempo | Length |
 |---|---|---|
@@ -42,16 +41,23 @@ you can see them side by side.
 | 4 | 170 bpm | 11.3 s |
 | 5 | 200 bpm | 9.6 s |
 
-Every level is the same 32 notes long, so as the tempo climbs the piece gets shorter.
-The repeat chance is a constant and never looks at the level number, so the levels only
-really differ in speed and in which pattern the seed happened to produce.
+Every level is the same thirty two notes, so as the tempo climbs the piece gets shorter
+and busier. Nothing else changes, which is deliberate. The levels still sound like the
+same piece of music being played with more urgency rather than five unrelated tracks.
 
-The numbers worth tweaking are all at the top of the file, including `noteRandomness`.
-Set it to 0 and you get a strict low-high-low-high with no variation at all.
+## What it produces
 
-## Also in here
+Five MIDI files, one per level, plus a picture showing all five patterns drawn as blocks
+so you can see where the repeats landed. The whole run takes under a second.
 
-`Music_Report.docx` is the report and `Code_Documentation.docx` explains how the code
-works and what it could be used for.
+MIDI rather than recorded audio because the program is deciding notes, not sounds. One
+level comes out at around 600 bytes.
+
+## What it does not do
+
+Two notes is not a melody in any honest sense. The result is closer to an adaptive pulse
+than a tune, the rhythm never varies, and difficulty only ever changes the speed. Nobody
+has sat down and listened to it properly either, so the idea that faster music feels
+harder is borrowed from convention rather than something I tested.
 
 Samar Khajuria
