@@ -130,7 +130,7 @@ public class MusicGenerator {
 
     // Harder levels are played harder: 78 at level 1, up to 110 at level 5.
     static int loudnessForLevel(int level) {
-        return 70 + 8 * level;
+        return Math.min(127, 70 + 8 * level);
     }
 
 
@@ -296,7 +296,7 @@ public class MusicGenerator {
     // The bass plays this level's pattern in every bar, built on the bar's chord.
     static int[] makeBass(int level, int[] chords) {
         int[] scale = scaleForLevel(level);
-        int[] pattern = bassPatterns[level - 1];
+        int[] pattern = bassPatterns[Math.min(level, bassPatterns.length) - 1];
         int[] notes = new int[slots];
 
         for (int slot = 0; slot < slots; slot++) {
