@@ -129,6 +129,7 @@ public class MusicGenerator {
 
 
     // Harder levels are played harder: 78 at level 1, up to 110 at level 5.
+    // It stops at 127 because that is the loudest a MIDI note can be.
     static int loudnessForLevel(int level) {
         return Math.min(127, 70 + 8 * level);
     }
@@ -294,6 +295,7 @@ public class MusicGenerator {
 
 
     // The bass plays this level's pattern in every bar, built on the bar's chord.
+    // Levels past the last pattern keep using the busiest one.
     static int[] makeBass(int level, int[] chords) {
         int[] scale = scaleForLevel(level);
         int[] pattern = bassPatterns[Math.min(level, bassPatterns.length) - 1];
